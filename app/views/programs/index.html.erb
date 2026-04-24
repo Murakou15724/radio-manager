@@ -1,0 +1,141 @@
+<div class="app-container">
+  <div class="app-content">
+    <header class="page-header">
+      <h1>ラジオ番組管理</h1>
+      <p class="page-subtitle">あなたのラジオライフをもっと快適に</p>
+    </header>
+
+    <section class="form-section">
+      <div class="form-section-header">
+        <span class="form-icon">+</span>
+        <h2>番組を追加</h2>
+      </div>
+
+      <%= form_with model: @program, local: true do |f| %>
+        <div class="form-content">
+          <div class="form-group">
+            <%= f.label :name, "番組名" %>
+            <%= f.text_field :name, placeholder: "番組名を入力" %>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <%= f.label :frequency_type, "頻度" %>
+              <%= f.select :frequency_type, [["毎週", "weekly"], ["隔週", "biweekly"], ["月1", "monthly"]] %>
+            </div>
+
+            <div class="form-group">
+              <%= f.label :weekday, "曜日" %>
+              <%= f.select :weekday, Program.weekday_options, include_blank: "基準日（隔週用）" %>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <%= f.label :week_of_month, "第何週（月1用）" %>
+              <%= f.select :week_of_month, [["第1週", 1], ["第2週", 2], ["第3週", 3], ["第4週", 4], ["第5週", 5]] %>
+            </div>
+
+            <div class="form-group">
+              <%= f.label :base_date, "基準日（隔週用）" %>
+              <%= f.date_field :base_date %>
+            </div>
+          </div>
+        </div>
+
+        <%= f.submit "追加する", class: "primary-button submit-button" %>
+      <% end %>
+    </section>
+
+    <section class="program-section">
+      <div class="section-header">
+        <h2>未聴取の番組</h2>
+        <span class="section-count"><%= @unlistened_programs.count %></span>
+      </div>
+      
+      <% if @unlistened_programs.any? %>
+        <ul class="program-list">
+          <% @unlistened_programs.each do |program| %>
+            <li class="program-card">
+              <div class="program-card-header">
+                <strong><%= program.name %></strong>
+              </div>
+              <div class="program-meta">
+                <span>
+                  <% remaining_days = program.days_until_next_update %>
+                  <% if remaining_days.present? %>
+                    ⏰ あと <%= remaining_days %> 日
+                  <% else %>
+                    次回未設定
+                  <% end %>
+                </span>
+                <span>📅 次回: <%= program.next_update_date %></span>
+              </div>
+              <div class="program-actions">
+                <%= button_to "聴いた", toggle_program_path(program), method: :patch, class: "listen-button" %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <div class="empty-state">
+          <div class="empty-icon">✓</div>
+          <p>すべて聴き取りました！</p>
+        </div>
+      <% end %>
+    </section>
+
+    <details class="collapsible-listened">
+      <summary>
+        <div>
+          <h2>聴取済みの番組</h2>
+          <span class="summary-count"><%= @listened_programs.count %></span>
+        </div>
+        <span class="chevron">›</span>
+      </summary>
+      <div class="panel">
+        <% if @listened_programs.any? %>
+          <ul class="program-list">
+            <% @listened_programs.each do |program| %>
+              <li class="program-card listened">
+                <div class="program-card-header">
+                  <strong><%= program.name %></strong>
+                </div>
+                <div class="program-meta">
+                  <span>
+                    <% remaining_days = program.days_until_next_update %>
+                    <% if remaining_days.present? %>
+                      ⏰ あと <%= remaining_days %> 日
+                    <% else %>
+                      次回未設定
+                    <% end %>
+                  </span>
+                  <span>📅 次回: <%= program.next_update_date %></span>
+                </div>
+                <div class="program-actions">
+                  <%= button_to "戻す", toggle_program_path(program), method: :patch, class: "unmark-button" %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="empty-state">
+            <div class="empty-icon">🎵</div>
+            <p>聴取済みの番組はまだありません</p>
+          </div>
+        <% end %>
+      </div>
+    </details>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item active" data-view="main">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">メイン</span>
+    </a>
+    <a href="<%= list_programs_path %>" class="nav-item" data-view="list">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">番組一覧</span>
+    </a>
+  </nav>
+</div>

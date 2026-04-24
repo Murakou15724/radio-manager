@@ -1,0 +1,44 @@
+<div class="container">
+  <section class="form-section">
+    <h1>番組を編集</h1>
+
+    <%= form_with model: @program, local: true do |f| %>
+      <div class="form-grid">
+        <div class="form-group">
+          <%= f.label :name, "番組名" %>
+          <%= f.text_field :name %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :frequency_type, "頻度" %>
+          <%= f.select :frequency_type, [["毎週", "weekly"], ["隔週", "biweekly"], ["月1", "monthly"]] %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :weekday, "曜日" %>
+          <%= f.select :weekday, Program.weekday_options, include_blank: "選択してください" %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :week_of_month, "第何週（月1用）" %>
+          <%= f.number_field :week_of_month %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :base_date, "基準日（隔週用）" %>
+          <%= f.date_field :base_date %>
+        </div>
+      </div>
+
+      <%= f.submit "更新", class: "primary-button" %>
+    <% end %>
+
+    <div style="margin-top: 2rem; text-align: center;">
+      <%= button_to "削除", program_path(@program), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "danger-button" %>
+    </div>
+  </section>
+
+  <div style="text-align: center; margin-top: 2rem;">
+    <%= link_to "戻る", root_path, class: "button-link" %>
+  </div>
+</div>

@@ -1,0 +1,74 @@
+<div class="app-container">
+  <div class="app-content">
+    <header class="page-header">
+      <h1>📻 すべての番組</h1>
+      <p class="page-subtitle">登録済みの番組一覧</p>
+    </header>
+
+    <% if @programs.any? %>
+      <section class="program-section">
+        <div class="section-header">
+          <h2>登録されている番組</h2>
+          <span class="section-count"><%= @programs.count %></span>
+        </div>
+        
+        <ul class="program-list">
+          <% @programs.each do |program| %>
+            <li class="program-card <%= 'listened' if program.listened %>">
+              <div class="program-card-header">
+                <div class="program-card-title">
+                  <span class="program-status-icon"><%= program.listened ? "✓" : "◯" %></span>
+                  <strong><%= program.name %></strong>
+                </div>
+              </div>
+              <div class="program-details">
+                <div class="detail-item">
+                  <span class="detail-label">🔄 頻度</span>
+                  <span class="detail-value"><%= program.frequency_label %></span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">📅 曜日</span>
+                  <span class="detail-value"><%= program.weekday_label || "-" %></span>
+                </div>
+                <% if program.base_date.present? %>
+                  <div class="detail-item">
+                    <span class="detail-label">📍 基準日</span>
+                    <span class="detail-value"><%= program.base_date.strftime("%m/%d") %></span>
+                  </div>
+                <% end %>
+                <% if program.week_of_month.present? %>
+                  <div class="detail-item">
+                    <span class="detail-label">📊 第何週</span>
+                    <span class="detail-value">第<%= program.week_of_month %>週</span>
+                  </div>
+                <% end %>
+              </div>
+              <div class="program-actions">
+                <%= link_to "✏️ 編集", edit_program_path(program), class: "edit-button" %>
+                <%= button_to "🗑️ 削除", program_path(program), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "delete-button" %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% else %>
+      <section class="empty-section">
+        <div class="empty-illustration">📻</div>
+        <h2>まだ番組が登録されていません</h2>
+        <p>メインページから番組を追加しましょう</p>
+        <%= link_to "メインページへ", root_path, class: "primary-button action-button" %>
+      </section>
+    <% end %>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="<%= root_path %>" class="nav-item" data-view="main">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">メイン</span>
+    </a>
+    <a href="#" class="nav-item active" data-view="list">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">番組一覧</span>
+    </a>
+  </nav>
+</div>
