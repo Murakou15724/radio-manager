@@ -1,0 +1,26 @@
+<div class="app-container">
+  <div class="app-content">
+    <header class="page-header">
+      <h1>⚙️ 設定</h1>
+      <p class="page-subtitle">表示モードや画面全体の見た目を切り替えます</p>
+    </header>
+
+    <section class="form-section">
+      <div class="form-section-header">
+        <span class="form-icon">🎨</span>
+        <h2>テーマ設定</h2>
+      </div>
+
+      <div class="form-content">
+        <p>ダークモードとライトモードを切り替えて、色味を好みに合わせてください。</p>
+
+        <div class="settings-actions" data-controller="theme">
+          <button type="button" class="secondary-button" data-action="click->theme#setDark">ダークモード</button>
+          <button type="button" class="secondary-button" data-action="click->theme#setLight">ライトモード</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <%= render 'shared/bottom_nav' %>
+</div>

@@ -17,6 +17,14 @@ export default class extends Controller {
     this.setTheme(newTheme)
   }
 
+  setDark() {
+    this.setTheme('dark')
+  }
+
+  setLight() {
+    this.setTheme('light')
+  }
+
   setTheme(theme) {
     // HTMLタグのdata-theme属性を設定
     document.documentElement.setAttribute('data-theme', theme)
@@ -24,15 +32,15 @@ export default class extends Controller {
     // LocalStorageに保存
     localStorage.setItem('theme', theme)
     
-    // アイコン更新
+    // アイコン更新（テーマトグルボタンだけに適用）
     this.updateIcon(theme)
   }
 
   updateIcon(theme) {
-    const button = this.element
-    if (button) {
+    const element = this.element
+    if (element && element.classList.contains('theme-toggle-btn')) {
       // ダークモードの場合は月アイコン、ライトモードの場合は太陽アイコンを表示
-      button.textContent = theme === 'dark' ? '🌙' : '☀️'
+      element.textContent = theme === 'dark' ? '🌙' : '☀️'
     }
   }
 }
