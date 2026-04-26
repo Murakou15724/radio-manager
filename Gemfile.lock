@@ -144,8 +144,6 @@ GEM
       prism (~> 1.5)
     msgpack (1.8.0)
     mutex_m (0.3.0)
-    mysql2 (0.5.7)
-      bigdecimal
     net-imap (0.6.3)
       date
       net-protocol
@@ -158,6 +156,7 @@ GEM
     nio4r (2.7.5)
     nokogiri (1.19.2-x86_64-linux-gnu)
       racc (~> 1.4)
+    pg (1.6.3-x86_64-linux)
     pp (0.6.3)
       prettyprint
     prettyprint (0.2.0)
@@ -267,7 +266,7 @@ DEPENDENCIES
   debug
   importmap-rails
   jbuilder
-  mysql2 (~> 0.5)
+  pg
   puma (>= 5.0)
   rails (~> 7.1.0)
   selenium-webdriver

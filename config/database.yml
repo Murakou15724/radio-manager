@@ -10,12 +10,9 @@
 #   https://dev.mysql.com/doc/refman/5.7/en/password-hashing.html
 #
 default: &default
-  adapter: mysql2
-  encoding: utf8mb4
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: radio_user
-  password: password
-  socket: /var/run/mysqld/mysqld.sock
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
 
 development:
   <<: *default
