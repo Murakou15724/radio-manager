@@ -16,7 +16,7 @@ default: &default
 
 development:
   <<: *default
-  database: radio_manager_development
+  url: <%= ENV['DATABASE_URL'] %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".

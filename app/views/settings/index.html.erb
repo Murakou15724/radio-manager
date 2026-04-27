@@ -20,7 +20,22 @@
         </div>
       </div>
     </section>
-  </div>
+    <section class="form-section">
+      <div class="form-section-header">
+        <span class="form-icon">🗄️</span>
+        <h2>データベース接続情報</h2>
+      </div>
 
-  <%= render 'shared/bottom_nav' %>
+      <div class="form-content">
+        <p>DBeaverなどのツールでデータベースに接続するための情報です。</p>
+
+        <div class="db-info">
+          <p><strong>ホスト:</strong> localhost</p>
+          <p><strong>ポート:</strong> 5432</p>
+          <p><strong>データベース:</strong> <%= @db_config[:database] %></p>
+          <p><strong>ユーザー:</strong> <%= @db_config[:username] %></p>
+          <p><strong>パスワード:</strong> <%= @db_config[:password] %></p>
+        </div>
+      </div>
+    </section>
 </div>

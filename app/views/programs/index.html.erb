@@ -52,6 +52,7 @@
         <h2>未聴取の番組</h2>
         <span class="section-count"><%= @unlistened_programs.count %></span>
       </div>
+      <div class="sort-hint">📆 次回更新日が近い順</div>
       
       <% if @unlistened_programs.any? %>
         <ul class="program-list">
@@ -59,14 +60,17 @@
             <li class="program-card">
               <div class="program-card-header">
                 <strong><%= program.name %></strong>
+                <% if program.is_updated_today? %>
+                  <span class="updated-today-badge">今日更新</span>
+                <% end %>
               </div>
               <div class="program-meta">
                 <span>
                   <% remaining_days = program.days_until_next_update %>
                   <% if remaining_days.present? %>
-                    ⏰ あと <%= remaining_days %> 日
+                    <span class="<%= program.remaining_days_css_class %>">⏰ あと <%= remaining_days %> 日</span>
                   <% else %>
-                    次回未設定
+                    更新日未設定
                   <% end %>
                 </span>
                 <span>📅 次回: <%= program.next_update_date %></span>
@@ -94,20 +98,24 @@
         <span class="chevron">›</span>
       </summary>
       <div class="panel">
+        <div class="sort-hint">📆 次回更新日が近い順</div>
         <% if @listened_programs.any? %>
           <ul class="program-list">
             <% @listened_programs.each do |program| %>
               <li class="program-card listened">
                 <div class="program-card-header">
                   <strong><%= program.name %></strong>
+                  <% if program.is_updated_today? %>
+                    <span class="updated-today-badge">今日更新</span>
+                  <% end %>
                 </div>
                 <div class="program-meta">
                   <span>
                     <% remaining_days = program.days_until_next_update %>
                     <% if remaining_days.present? %>
-                      ⏰ あと <%= remaining_days %> 日
+                      <span class="<%= program.remaining_days_css_class %>">⏰ あと <%= remaining_days %> 日</span>
                     <% else %>
-                      次回未設定
+                      更新日未設定
                     <% end %>
                   </span>
                   <span>📅 次回: <%= program.next_update_date %></span>

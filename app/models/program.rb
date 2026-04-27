@@ -104,6 +104,19 @@ class Program < ApplicationRecord
     (next_date - from_date).to_i
   end
 
+  def is_updated_today?(from_date = Date.today)
+    next_date = next_update_date(from_date)
+    return false if next_date.nil?
+    next_date == from_date
+  end
+
+  def remaining_days_css_class(from_date = Date.today)
+    days = days_until_next_update(from_date)
+    return "remaining-days-none" if days.nil?
+    return "remaining-days-urgent" if days.between?(1, 2)
+    "remaining-days"
+  end
+
   private
 
   def nth_weekday_of_month(year, month, weekday, week_of_month)
