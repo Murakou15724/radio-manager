@@ -38,4 +38,13 @@
         </div>
       </div>
     </section>
+  </div>
+
+  <div class="navigation-section">
+    <div class="navigation-buttons">
+      <%= link_to "メイン", root_path, class: "nav-button" %>
+      <%= link_to "設定", settings_path, class: "nav-button" %>
+      <%= button_to "ログアウト", logout_path, method: :delete, class: "nav-button logout-button" %>
+    </div>
+  </div>
 </div>
