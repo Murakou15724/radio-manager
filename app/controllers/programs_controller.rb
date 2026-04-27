@@ -37,7 +37,7 @@ class ProgramsController < ApplicationController
     @program = Program.find(params[:id])
 
     if @program.update(program_params)
-      redirect_to root_path
+      redirect_to programs_path
     else
       render :edit
     end
@@ -46,13 +46,13 @@ class ProgramsController < ApplicationController
   def destroy
     @program = Program.find(params[:id])
     @program.destroy
-    redirect_to root_path
+    redirect_to request.referer || programs_path
   end
 
   def toggle
     program = Program.find(params[:id])
     program.update(listened: !program.listened)
-    redirect_to root_path
+    redirect_back fallback_location: root_path
   end
 
   private
