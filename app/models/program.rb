@@ -23,7 +23,7 @@ class Program < ApplicationRecord
     WEEKDAYS_JP[weekday]
   end
 
-  def next_update_date(from_date = Date.today)
+  def next_update_date(from_date = Date.current)
     case frequency_type
     when "weekly"
       # 毎週: 次の該当曜日
@@ -97,7 +97,7 @@ class Program < ApplicationRecord
     end
   end
 
-  def current_update_date(from_date = Date.today)
+  def current_update_date(from_date = Date.current)
     case frequency_type
     when "weekly"
       return nil if weekday.nil?
@@ -131,22 +131,22 @@ class Program < ApplicationRecord
     end
   end
 
-  def mark_as_listened!(from_date = Date.today)
+  def mark_as_listened!(from_date = Date.current)
     update(listened: true, last_checked_date: current_update_date(from_date))
   end
 
-  def days_until_next_update(from_date = Date.today)
+  def days_until_next_update(from_date = Date.current)
     next_date = next_update_date(from_date)
     return nil if next_date.nil?
 
     (next_date - from_date).to_i
   end
 
-  def is_updated_today?(from_date = Date.today)
+  def is_updated_today?(from_date = Date.current)
     current_update_date(from_date) == from_date
   end
 
-  def remaining_days_css_class(from_date = Date.today)
+  def remaining_days_css_class(from_date = Date.current)
     days = days_until_next_update(from_date)
     return "remaining-days-none" if days.nil?
     return "remaining-days-urgent" if days.between?(1, 2)
