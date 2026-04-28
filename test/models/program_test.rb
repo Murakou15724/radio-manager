@@ -73,6 +73,22 @@ class ProgramTest < ActiveSupport::TestCase
     assert_nil biweekly.days_until_next_update
   end
 
+  test "current_update_date returns the latest scheduled date on or before today for weekly programs" do
+    assert_equal Date.new(2026, 4, 20), @weekly_program.current_update_date(Date.new(2026, 4, 23))
+    assert_equal Date.new(2026, 4, 20), @weekly_program.current_update_date(Date.new(2026, 4, 20))
+  end
+
+  test "mark_as_listened! saves the current update date" do
+    @weekly_program.mark_as_listened!(Date.new(2026, 4, 20))
+    assert_equal Date.new(2026, 4, 20), @weekly_program.reload.last_checked_date
+    assert @weekly_program.listened
+  end
+
+  test "current_update_date returns the latest scheduled date on or before today for biweekly programs" do
+    assert_equal Date.new(2026, 4, 20), @biweekly_program.current_update_date(Date.new(2026, 4, 25))
+    assert_equal Date.new(2026, 4, 20), @biweekly_program.current_update_date(Date.new(2026, 4, 20))
+  end
+
   # Step 2: 隔週更新
   test "biweekly: returns nil if from_date is before base_date" do
     from_date = Date.new(2026, 4, 19)  # base_date より前

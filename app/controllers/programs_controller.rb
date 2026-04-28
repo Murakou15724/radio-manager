@@ -2,9 +2,9 @@ class ProgramsController < ApplicationController
   def index
     # Step 5: 自動で未聴取に戻す
     Program.where(listened: true).each do |program|
-      next_date = program.next_update_date
-      if next_date && next_date <= Date.today && program.last_checked_date != next_date
-        program.update(listened: false, last_checked_date: next_date)
+      current_date = program.current_update_date
+      if current_date && program.last_checked_date != current_date
+        program.update(listened: false, last_checked_date: current_date)
       end
     end
 
@@ -51,7 +51,11 @@ class ProgramsController < ApplicationController
 
   def toggle
     program = Program.find(params[:id])
-    program.update(listened: !program.listened)
+    if program.listened
+      program.update(listened: false)
+    else
+      program.mark_as_listened!
+    end
     redirect_back fallback_location: root_path
   end
 

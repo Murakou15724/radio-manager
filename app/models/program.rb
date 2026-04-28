@@ -97,6 +97,44 @@ class Program < ApplicationRecord
     end
   end
 
+  def current_update_date(from_date = Date.today)
+    case frequency_type
+    when "weekly"
+      return nil if weekday.nil?
+      days_behind = (from_date.wday - weekday) % 7
+      from_date - days_behind
+
+    when "biweekly"
+      return nil if base_date.nil? || weekday.nil? || from_date < base_date
+
+      candidate = from_date - ((from_date.wday - weekday) % 7)
+      while candidate >= base_date
+        return candidate if (candidate - base_date).to_i % 14 == 0
+        candidate -= 7
+      end
+
+      nil
+
+    when "monthly"
+      return nil if weekday.nil? || week_of_month.nil?
+
+      date = from_date
+      24.times do
+        candidate = nth_weekday_of_month(date.year, date.month, weekday, week_of_month)
+        return candidate if candidate && candidate <= from_date
+        date = date.prev_month
+      end
+
+      nil
+    else
+      nil
+    end
+  end
+
+  def mark_as_listened!(from_date = Date.today)
+    update(listened: true, last_checked_date: current_update_date(from_date))
+  end
+
   def days_until_next_update(from_date = Date.today)
     next_date = next_update_date(from_date)
     return nil if next_date.nil?
@@ -105,9 +143,7 @@ class Program < ApplicationRecord
   end
 
   def is_updated_today?(from_date = Date.today)
-    next_date = next_update_date(from_date)
-    return false if next_date.nil?
-    next_date == from_date
+    current_update_date(from_date) == from_date
   end
 
   def remaining_days_css_class(from_date = Date.today)
