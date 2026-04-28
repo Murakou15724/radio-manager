@@ -5,10 +5,6 @@
       <p class="page-subtitle">あなたのラジオライフをもっと快適に</p>
     </header>
 
-    <div class="current-date">
-      <p>今日: <%= Date.today.strftime('%Y年%m月%d日') %></p>
-    </div>
-
     <section class="form-section">
       <div class="form-section-header">
         <span class="form-icon">+</span>
@@ -52,7 +48,7 @@
     </section>
 
     <div class="current-date">
-      <p>今日: <%= Date.today.strftime('%Y年%m月%d日') %></p>
+      <p class="current-date-display">📅 今日: <%= Date.today.strftime('%Y年%m月%d日') %></p>
     </div>
 
     <section class="program-section">
