@@ -4,7 +4,7 @@
 
 本書は、Radio Manager の現行実装を、利用者・運用者・今後の開発担当者が共通理解できるように整理したものである。記載はリポジトリ内のコード、データベーススキーマ、テストコードに基づく。未実行の検証やリポジトリから判断できない運用情報は、事実と分けて記載する。
 
-- 最終確認日: 2026-07-26
+- 最終確認日: 2026-08-12（認証方式の変更に伴い、第4節・第7節・第9.1節・第11節を更新）
 - 確認対象: 現在のワークツリーにあるアプリケーションコード、設定、データベース定義、テストコード
 - 実行していない確認: テスト実行、Docker イメージのビルド、アプリケーションの起動、実環境への接続
 
@@ -18,7 +18,7 @@
 
 ### 2.2 実装済みの機能
 
-- 共通パスワードによるログインとログアウト
+- パスワード不要のログイン（ログインボタン押下のみ）とログアウト
 - 番組の登録、一覧、編集、削除
 - 毎週・隔週・月1回の更新日計算
 - 未聴取／聴取済みの切り替え
@@ -56,14 +56,14 @@
 
 ## 4. 画面、ルート、認証
 
-`ApplicationController` は全アクションの前に `require_login` を実行する。例外は、`SessionsController` が明示的に除外するログイン画面とログイン処理だけである。認証は `params[:password] == ENV["APP_PASSWORD"]` の比較に成功すると `session[:authenticated] = true` を保存する共通パスワード方式である。利用者テーブルはない。`APP_PASSWORD` が未設定で、かつリクエストから `password` parameter 自体が省略された場合は `nil == nil` となり、認証を通過し得る。
+`ApplicationController` は全アクションの前に `require_login` を実行する。例外は、`SessionsController` が明示的に除外するログイン画面とログイン処理だけである。認証はパスワード照合を行わず、ログイン画面の送信（POST `/login`）を受けると無条件に `session[:authenticated] = true` を保存する方式である（2026-08-12 の対応でパスワード照合を撤廃）。利用者テーブルはない。
 
 根拠: `app/controllers/application_controller.rb` の `ApplicationController#require_login` / `logged_in?`、`app/controllers/sessions_controller.rb` の `SessionsController#create`
 
 | HTTP | パス | 処理／画面 | 認証 | 備考 |
 |---|---|---|---|---|
 | GET | `/login` | `SessionsController#new` | 不要 | ログイン画面 |
-| POST | `/login` | `SessionsController#create` | 不要 | 共通パスワードを照合 |
+| POST | `/login` | `SessionsController#create` | 不要 | パスワード照合なしで認証状態にする |
 | DELETE | `/logout` | `SessionsController#destroy` | 必要 | セッションの認証フラグを削除 |
 | GET | `/` | `ProgramsController#index` | 必要 | メイン画面。表示時に聴取状態を更新する場合がある |
 | GET | `/programs` | `ProgramsController#index` | 必要 | resources が生成する一覧ルート |
@@ -87,7 +87,7 @@
 | `app/models/program.rb` | 番組と更新周期のドメインロジック | `Program`、enum、日付計算、聴取記録 |
 | `app/controllers/application_controller.rb` | 全画面共通の認証 | `require_login`、`logged_in?` |
 | `app/controllers/programs_controller.rb` | 番組の表示・CRUD・聴取状態変更 | `index`、`create`、`update`、`destroy`、`toggle` |
-| `app/controllers/sessions_controller.rb` | 共通パスワード認証 | `new`、`create`、`destroy` |
+| `app/controllers/sessions_controller.rb` | パスワード不要のログイン処理 | `new`、`create`、`destroy` |
 | `app/controllers/settings_controller.rb` | DB 接続設定の取得 | `SettingsController#index` |
 | `app/views/` | HTML 画面 | ログイン、メイン、一覧、編集、設定、共通ナビゲーション |
 | `app/javascript/controllers/theme_controller.js` | 表示テーマ | `ThemeController#setTheme`、`toggle` |
@@ -121,10 +121,9 @@
 
 ```mermaid
 flowchart TD
-    A[GET /login] --> B[パスワード入力]
-    B --> C{POST /login<br/>APP_PASSWORD と一致}
-    C -- 不一致 --> A
-    C -- 一致 --> D[session authenticated = true]
+    A[GET /login] --> B[ログインボタン押下]
+    B --> C[POST /login]
+    C --> D[session authenticated = true]
     D --> E[GET / または /programs]
     E --> F[ProgramsController#index]
     F --> G{聴取済みで<br/>更新回が変わったか}
@@ -184,7 +183,6 @@ flowchart TD
 
 | 変数 | 用途 | 根拠 |
 |---|---|---|
-| `APP_PASSWORD` | **必須**。ログイン用の共通パスワード | `SessionsController#create` |
 | `DATABASE_URL` | production の DB 接続先 | `config/database.yml` |
 | `RAILS_MASTER_KEY` | production で必要な credentials 復号鍵を外部注入する通常の手段の一つ | `config/environments/production.rb` の `require_master_key=true` |
 | `RAILS_SERVE_STATIC_FILES` | production の静的ファイル配信 | `config/environments/production.rb` |
@@ -194,8 +192,6 @@ flowchart TD
 | `REDIS_URL` | production の Action Cable 接続先 | `config/cable.yml` |
 
 `dotenv-rails` は `Gemfile` で全環境向けに宣言されているが、実際の環境変数ファイルや本番設定値は本調査の対象外である。
-
-`APP_PASSWORD` は運用上必須である。`SessionsController#create` は存在確認をせず `params[:password]` と `ENV["APP_PASSWORD"]` を直接比較するため、環境変数が未設定で password parameter も省略されたリクエストでは両辺が `nil` となる。通常のフォームで空文字を送信した場合の値とは区別し、本書ではコードから確認できる parameter 省略時の条件だけを記載する。
 
 production は credentials の復号鍵を必要とする。Rails のコメント上は `RAILS_MASTER_KEY`、`config/master.key`、環境別 key などが候補であり、`RAILS_MASTER_KEY` だけが唯一の経路ではない。秘密鍵はイメージへ格納せず、通常は環境変数等で外部注入する。
 
@@ -224,7 +220,7 @@ Docker ビルド、Compose 起動、Rails 起動は実行していない。
 
 ### 10.2 未テストまたは不足している領域
 
-- ログイン成功・失敗、ログアウト、未認証リダイレクト
+- ログイン、ログアウト、未認証リダイレクト
 - 番組の create／update／destroy／toggle
 - メイン画面表示時の自動リセット
 - 設定画面、テーマ切り替え
@@ -239,7 +235,7 @@ controller テストは認証済みセッションを用意せず `:success` を
 | 重要度 | 内容 | 根拠・影響 |
 |---|---|---|
 | 高 | 設定画面が DB パスワードを HTML に表示する | `SettingsController#index` が接続設定を渡し、`app/views/settings/index.html.erb` が `@db_config[:password]` を出力する。認証済み利用者への秘密情報漏えいとなる |
-| 高 | `APP_PASSWORD` 未設定時に認証を通過し得る | `SessionsController#create` は `params[:password] == ENV["APP_PASSWORD"]` を直接評価する。環境変数が未設定で password parameter も省略されたリクエストでは `nil == nil` となる。空文字送信時とは区別が必要である |
+| 高 | ログインにパスワード照合が一切ない | `SessionsController#create` は無条件に `session[:authenticated] = true` を保存する。ユーザーの意図的な要求により 2026-08-12 に導入された仕様であり、公開範囲を限定するなど別の手段でアクセス制御する前提が必要である |
 | 高 | `docker-compose.yml` が有効な YAML ではない | 末尾に `</content>` と XML 風の文字列、ローカルパスが混入している。YAML パースでエラーになるため Compose をそのまま利用できない |
 | 高 | Compose の production 起動に必要な復号鍵の注入定義がない | `Dockerfile` は production を固定し、`config/environments/production.rb` は復号鍵を必須とする。`.dockerignore` は key ファイルを除外し、Compose は `DATABASE_URL` しか渡さない。YAML 修正だけでは既定起動できると確認できず、鍵の安全な外部注入が必要である |
 | 高 | Docker ビルド成立が未確認で、失敗要因がある | `Dockerfile` は `chown -R rails:rails db log storage tmp` を実行するが、リポジトリに `storage/` が存在しない。Docker ビルドは未実行 |
@@ -249,7 +245,7 @@ controller テストは認証済みセッションを用意せず `:success` を
 | 中 | 設定画面の固定表示が実接続と一致しない | view は常に `localhost:5432` を表示するが、development は SQLite、Compose 内 DB ホストは `db`、production は `DATABASE_URL` に依存する |
 | 中 | 業務データの妥当性が保証されない | programs の全業務カラムが NULL 可で、model validation、DB 制約、業務カラムの index がない。日付計算不能なレコードも保存できる |
 | 中 | 隔週で基準日と指定曜日が異なる場合、計算とテスト期待値が一致しない可能性がある | `Program#next_update_date` は候補曜日に剰余日数を加えるため、指定曜日でない日を返し得る。テストの例は 2026-05-06 を期待するが、コードを静的に追うと 2026-05-04 になる。テスト未実行のため実測は未確認 |
-| 中 | 認証が単一の共有パスワードだけである | `SessionsController#create` と session の真偽値だけで認証する。利用者識別、権限分離、試行回数制限は実装されていない |
+| 中 | 認証が session の真偽値だけである | `SessionsController#create` は誰でもログインでき、利用者識別、権限分離は実装されていない |
 | 中 | production の Action Cable 構成が実動可能か未確認 | `config/cable.yml` は Redis adapter を指定するが、`Gemfile` の Redis gem はコメントアウトされ、業務 channel もない。Redis 接続を含む起動検証は未実施 |
 | 低 | controller テストが認証処理を考慮していない | `ProgramsControllerTest` の成功期待と `ApplicationController#require_login` が衝突する可能性が高い |
 | 低 | README が Rails 生成テンプレートのままである | `README.md` に環境構築、必要な環境変数、起動、テスト、デプロイの実手順がない |
@@ -261,7 +257,6 @@ controller テストは認証済みセッションを用意せず `:success` を
 - 本番のホスティングサービス、URL、所有者、運用担当者
 - production の DB、Redis、永続ストレージの実構成
 - バックアップ、監視、障害対応、復旧、リリース、ロールバックの手順
-- `APP_PASSWORD` 等の秘密情報の保管・更新方法
 - 現在の production 稼働有無、データ量、実利用者数
 - 意図する隔週仕様、特に基準日と指定曜日が異なる入力を許可するか
 - GET で自動リセットする設計が確定仕様か

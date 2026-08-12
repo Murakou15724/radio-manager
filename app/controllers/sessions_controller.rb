@@ -5,13 +5,8 @@ class SessionsController < ApplicationController
   end
 
   def create
-    if params[:password] == ENV["APP_PASSWORD"]
-      session[:authenticated] = true
-      redirect_to root_path, notice: "ログインしました"
-    else
-      flash.now[:alert] = "パスワードが間違っています"
-      render :new
-    end
+    session[:authenticated] = true
+    redirect_to root_path, notice: "ログインしました"
   end
 
   def destroy
