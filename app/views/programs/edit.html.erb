@@ -1,44 +1,47 @@
-<div class="container">
-  <section class="form-section">
-    <h1>番組を編集</h1>
+<div class="page-intro">
+  <p class="page-eyebrow">✏️ 編集</p>
+  <h1 class="page-title">番組を編集</h1>
+</div>
 
-    <%= form_with model: @program, local: true do |f| %>
-      <div class="form-grid">
-        <div class="form-group">
-          <%= f.label :name, "番組名" %>
-          <%= f.text_field :name %>
-        </div>
+<section class="form-section">
+  <%= form_with model: @program, local: true, class: "program-form" do |f| %>
+    <div class="form-group">
+      <%= f.label :name, "番組名" %>
+      <%= f.text_field :name %>
+    </div>
 
-        <div class="form-group">
-          <%= f.label :frequency_type, "頻度" %>
-          <%= f.select :frequency_type, [["毎週", "weekly"], ["隔週", "biweekly"], ["月1", "monthly"]] %>
-        </div>
-
-        <div class="form-group">
-          <%= f.label :weekday, "曜日" %>
-          <%= f.select :weekday, Program.weekday_options, include_blank: "選択してください" %>
-        </div>
-
-        <div class="form-group">
-          <%= f.label :week_of_month, "第何週（月1用）" %>
-          <%= f.number_field :week_of_month %>
-        </div>
-
-        <div class="form-group">
-          <%= f.label :base_date, "基準日（隔週用）" %>
-          <%= f.date_field :base_date %>
-        </div>
+    <div class="form-row">
+      <div class="form-group">
+        <%= f.label :frequency_type, "頻度" %>
+        <%= f.select :frequency_type, [["毎週", "weekly"], ["隔週", "biweekly"], ["月1", "monthly"]] %>
       </div>
 
-      <%= f.submit "更新", class: "primary-button" %>
-    <% end %>
-
-    <div style="margin-top: 2rem; text-align: center;">
-      <%= button_to "削除", program_path(@program), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "danger-button" %>
+      <div class="form-group">
+        <%= f.label :weekday, "曜日" %>
+        <%= f.select :weekday, Program.weekday_options, include_blank: "選択してください" %>
+      </div>
     </div>
-  </section>
 
-  <div style="text-align: center; margin-top: 2rem;">
-    <%= link_to "戻る", programs_path, class: "button-link" %>
+    <div class="form-row">
+      <div class="form-group">
+        <%= f.label :week_of_month, "第何週（月1用）" %>
+        <%= f.number_field :week_of_month %>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :base_date, "基準日（隔週用）" %>
+        <%= f.date_field :base_date %>
+      </div>
+    </div>
+
+    <%= f.submit "更新する", class: "primary-button submit-button" %>
+  <% end %>
+
+  <div class="form-section-footer">
+    <%= button_to "この番組を削除", program_path(@program), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "ghost-button ghost-button-danger" %>
   </div>
+</section>
+
+<div class="page-back-link">
+  <%= link_to "← 一覧に戻る", programs_path %>
 </div>

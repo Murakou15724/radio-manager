@@ -1,0 +1,16 @@
+<% if notice || alert %>
+  <div class="toast-stack">
+    <% if notice %>
+      <div class="toast toast-notice" data-controller="toast">
+        <span class="toast-icon">✓</span>
+        <span class="toast-message"><%= notice %></span>
+      </div>
+    <% end %>
+    <% if alert %>
+      <div class="toast toast-alert" data-controller="toast">
+        <span class="toast-icon">!</span>
+        <span class="toast-message"><%= alert %></span>
+      </div>
+    <% end %>
+  </div>
+<% end %>

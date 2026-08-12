@@ -1,0 +1,49 @@
+<li
+  class="program-card <%= 'listened' if program.listened %>"
+  data-name="<%= program.name %>"
+  data-frequency="<%= program.frequency_type %>"
+  <%= "data-filter-target=\"card\"".html_safe if local_assigns[:filterable] %>
+>
+  <div class="program-card-ring">
+    <svg class="progress-ring" viewBox="0 0 44 44">
+      <circle class="progress-ring-track" cx="22" cy="22" r="18"></circle>
+      <% ratio = program.cycle_progress_ratio %>
+      <% if ratio %>
+        <% circumference = (2 * Math::PI * 18).round(2) %>
+        <circle
+          class="progress-ring-fill <%= program.remaining_days_css_class %>"
+          cx="22" cy="22" r="18"
+          transform="rotate(-90 22 22)"
+          style="stroke-dasharray: <%= circumference %>; stroke-dashoffset: <%= (circumference * (1 - ratio)).round(2) %>;"
+        ></circle>
+      <% end %>
+    </svg>
+    <div class="progress-ring-label">
+      <% days = program.days_until_next_update %>
+      <% if days %>
+        <strong><%= days %></strong><span>日</span>
+      <% else %>
+        <span class="progress-ring-label-none">-</span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="program-card-body">
+    <div class="program-card-header">
+      <strong class="program-card-name"><%= program.name %></strong>
+      <% if program.is_updated_today? %>
+        <span class="updated-today-badge">今日更新</span>
+      <% end %>
+    </div>
+    <div class="program-card-tags">
+      <span class="tag tag-<%= program.frequency_type %>"><%= program.frequency_label %></span>
+      <% if program.weekday_label %>
+        <span class="tag">毎<%= program.weekday_label %></span>
+      <% end %>
+    </div>
+  </div>
+
+  <%= button_to toggle_program_path(program), method: :patch, class: "icon-toggle-button #{'is-listened' if program.listened}", title: (program.listened ? "未聴取に戻す" : "聴いた") do %>
+    <%= program.listened ? "↺" : "✓" %>
+  <% end %>
+</li>

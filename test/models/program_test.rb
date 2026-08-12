@@ -198,4 +198,18 @@ class ProgramTest < ActiveSupport::TestCase
     from_date = Date.new(2026, 2, 1)  # 2月に第5月曜はない
     assert_equal Date.new(2026, 3, 30), monthly.next_update_date(from_date)
   end
+
+  test "cycle_progress_ratio returns nil when next_update_date is nil" do
+    program = Program.create!(name: "曜日なし", frequency_type: :weekly, listened: false)
+    assert_nil program.cycle_progress_ratio
+  end
+
+  test "cycle_progress_ratio is 0 right after an update and approaches 1 before the next one" do
+    from_date = Date.new(2026, 4, 20)  # 月曜、@weekly_program の更新日当日
+    just_updated = @weekly_program.cycle_progress_ratio(from_date)
+    just_before_next = @weekly_program.cycle_progress_ratio(from_date + 6)
+
+    assert_in_delta 0.0, just_updated, 0.001
+    assert_in_delta (6.0 / 7), just_before_next, 0.001
+  end
 end

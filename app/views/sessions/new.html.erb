@@ -1,11 +1,18 @@
-<div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
-  <h1>ログイン</h1>
+<div class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="brand-mark login-brand-mark">📻</span>
+      <h1>RADIO<span class="brand-name-accent">MANAGER</span></h1>
+    </div>
 
-  <%= form_with url: login_path, method: :post, style: "max-width: 300px; width: 100%;" do |f| %>
-    <%= f.submit "ログイン", style: "width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;" %>
-  <% end %>
+    <div class="equalizer login-equalizer" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
 
-  <% if flash[:alert] %>
-    <p style="color: red; margin-top: 10px;"><%= flash[:alert] %></p>
-  <% end %>
+    <p class="login-copy">お気に入りのラジオ番組を、聴き逃さない。</p>
+
+    <%= form_with url: login_path, method: :post, class: "login-form" do %>
+      <%= submit_tag "ログイン", class: "primary-button submit-button" %>
+    <% end %>
+  </div>
 </div>

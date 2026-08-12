@@ -145,6 +145,18 @@ class Program < ApplicationRecord
     "remaining-days"
   end
 
+  CYCLE_LENGTH_DAYS = { "weekly" => 7, "biweekly" => 14, "monthly" => 30 }.freeze
+
+  # 次回更新日までの残り日数を、頻度ごとの周期長に対する割合(0.0〜1.0)で表す。
+  # カード上の円形プログレスリングの表示に使う。
+  def cycle_progress_ratio(from_date = Date.current)
+    days = days_until_next_update(from_date)
+    return nil if days.nil?
+
+    cycle_length = CYCLE_LENGTH_DAYS[frequency_type] || 7
+    (1 - (days.to_f / cycle_length)).clamp(0.0, 1.0)
+  end
+
   private
 
   def nth_weekday_of_month(year, month, weekday, week_of_month)
