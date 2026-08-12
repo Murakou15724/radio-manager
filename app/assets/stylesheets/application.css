@@ -705,6 +705,9 @@ a {
   position: relative;
   box-shadow: var(--shadow-sm);
   animation: card-in 0.35s ease both;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 @keyframes card-in {
@@ -881,9 +884,10 @@ a {
 
 .program-details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.6rem;
   margin: 0.6rem 0;
+  min-width: 0;
 }
 
 .detail-item {
