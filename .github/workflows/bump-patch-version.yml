@@ -1,0 +1,43 @@
+name: Bump patch version
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    if: "!contains(github.event.head_commit.message, '[skip version]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check whether VERSION was already changed in this push
+        id: check
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qx "VERSION"; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump PATCH version
+        if: steps.check.outputs.changed == 'false'
+        run: |
+          current="$(cat VERSION | tr -d '[:space:]')"
+          major="$(echo "$current" | cut -d. -f1)"
+          minor="$(echo "$current" | cut -d. -f2)"
+          patch="$(echo "$current" | cut -d. -f3)"
+          next_patch=$((patch + 1))
+          new_version="${major}.${minor}.${next_patch}"
+          echo "$new_version" > VERSION
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "chore: bump patch version to ${new_version} [skip version]"
+          git push

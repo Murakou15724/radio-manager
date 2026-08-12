@@ -23,10 +23,13 @@
   <body>
     <div class="app-shell">
       <header class="top-bar">
-        <%= link_to root_path, class: "brand" do %>
-          <span class="brand-mark">📻</span>
-          <span class="brand-name">RADIO<span class="brand-name-accent">MANAGER</span></span>
-        <% end %>
+        <div class="brand-group">
+          <%= link_to root_path, class: "brand" do %>
+            <span class="brand-mark">📻</span>
+            <span class="brand-name">RADIO<span class="brand-name-accent">MANAGER</span></span>
+          <% end %>
+          <span class="app-version">v<%= app_version %></span>
+        </div>
 
         <div class="top-bar-right">
           <div class="live-clock" data-controller="clock">

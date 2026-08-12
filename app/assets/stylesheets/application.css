@@ -146,6 +146,21 @@ a {
   background-clip: text;
 }
 
+.brand-group {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.app-version {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
 .top-bar-right {
   display: flex;
   align-items: center;
