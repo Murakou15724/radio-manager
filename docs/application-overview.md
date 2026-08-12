@@ -62,6 +62,7 @@
 
 | HTTP | パス | 処理／画面 | 認証 | 備考 |
 |---|---|---|---|---|
+| GET | `/up` | `Rails::HealthController#show`（Rails標準） | 不要 | ヘルスチェック/死活監視用。`ApplicationController`を経由しないためDBアクセスなし |
 | GET | `/login` | `SessionsController#new` | 不要 | ログイン画面 |
 | POST | `/login` | `SessionsController#create` | 不要 | パスワード照合なしで認証状態にする |
 | DELETE | `/logout` | `SessionsController#destroy` | 必要 | セッションの認証フラグを削除 |
