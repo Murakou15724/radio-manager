@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>RadioManager</title>
+    <title>RADIO MANAGER</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#0a0a12">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -11,15 +12,36 @@
   </head>
 
   <body>
-    <button 
-      class="theme-toggle-btn" 
-      data-controller="theme" 
-      data-action="click->theme#toggle"
-      title="テーマを切り替え"
-    >
-      🌙
-    </button>
+    <div class="app-shell">
+      <header class="top-bar">
+        <%= link_to root_path, class: "brand" do %>
+          <span class="brand-mark">📻</span>
+          <span class="brand-name">RADIO<span class="brand-name-accent">MANAGER</span></span>
+        <% end %>
 
-    <%= yield %>
+        <div class="top-bar-right">
+          <div class="live-clock" data-controller="clock">
+            <span class="live-dot"></span>
+            <span class="live-clock-time" data-clock-target="time">--:--:--</span>
+          </div>
+          <button
+            class="icon-button theme-toggle-btn"
+            data-controller="theme"
+            data-action="click->theme#toggle"
+            title="テーマを切り替え"
+          >🌙</button>
+        </div>
+      </header>
+
+      <%= render "shared/flash" %>
+
+      <main class="app-content">
+        <%= yield %>
+      </main>
+
+      <% unless controller_name == "sessions" %>
+        <%= render "shared/bottom_nav" %>
+      <% end %>
+    </div>
   </body>
 </html>

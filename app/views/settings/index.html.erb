@@ -1,50 +1,66 @@
-<div class="app-container">
-  <div class="app-content">
-    <header class="page-header">
-      <h1>⚙️ 設定</h1>
-      <p class="page-subtitle">表示モードや画面全体の見た目を切り替えます</p>
-    </header>
+<div class="page-intro">
+  <p class="page-eyebrow">⚙️ 設定</p>
+  <h1 class="page-title">設定</h1>
+  <p class="page-subtitle">表示モードや接続情報を確認します</p>
+</div>
 
-    <section class="form-section">
-      <div class="form-section-header">
-        <span class="form-icon">🎨</span>
-        <h2>テーマ設定</h2>
-      </div>
-
-      <div class="form-content">
-        <p>ダークモードとライトモードを切り替えて、色味を好みに合わせてください。</p>
-
-        <div class="settings-actions" data-controller="theme">
-          <button type="button" class="secondary-button" data-action="click->theme#setDark">ダークモード</button>
-          <button type="button" class="secondary-button" data-action="click->theme#setLight">ライトモード</button>
-        </div>
-      </div>
-    </section>
-    <section class="form-section">
-      <div class="form-section-header">
-        <span class="form-icon">🗄️</span>
-        <h2>データベース接続情報</h2>
-      </div>
-
-      <div class="form-content">
-        <p>DBeaverなどのツールでデータベースに接続するための情報です。</p>
-
-        <div class="db-info">
-          <p><strong>ホスト:</strong> localhost</p>
-          <p><strong>ポート:</strong> 5432</p>
-          <p><strong>データベース:</strong> <%= @db_config[:database] %></p>
-          <p><strong>ユーザー:</strong> <%= @db_config[:username] %></p>
-          <p>パスワードは表示されません。管理者にお問い合わせください。</p>
-        </div>
-      </div>
-    </section>
+<section class="form-section">
+  <div class="form-section-header">
+    <span class="form-icon">🎨</span>
+    <h2>テーマ設定</h2>
   </div>
 
-  <div class="navigation-section">
-    <div class="navigation-buttons">
-      <%= link_to "メイン", root_path, class: "nav-button" %>
-      <%= link_to "設定", settings_path, class: "nav-button" %>
-      <%= button_to "ログアウト", logout_path, method: :delete, class: "nav-button logout-button" %>
+  <div class="form-content">
+    <p>ダークモードとライトモードを切り替えて、色味を好みに合わせてください。</p>
+
+    <div class="settings-actions" data-controller="theme">
+      <button type="button" class="secondary-button" data-action="click->theme#setDark">🌙 ダークモード</button>
+      <button type="button" class="secondary-button" data-action="click->theme#setLight">☀️ ライトモード</button>
     </div>
   </div>
-</div>
+</section>
+
+<section class="form-section">
+  <div class="form-section-header">
+    <span class="form-icon">🗄️</span>
+    <h2>データベース接続情報</h2>
+  </div>
+
+  <div class="form-content">
+    <p>DBeaverなどのツールでデータベースに接続するための情報です。</p>
+
+    <div class="db-info">
+      <div class="db-info-row">
+        <span class="detail-label">ホスト</span>
+        <span class="detail-value">localhost</span>
+      </div>
+      <div class="db-info-row">
+        <span class="detail-label">ポート</span>
+        <span class="detail-value">5432</span>
+      </div>
+      <div class="db-info-row">
+        <span class="detail-label">データベース</span>
+        <span class="detail-value"><%= @db_config[:database] %></span>
+      </div>
+      <div class="db-info-row">
+        <span class="detail-label">ユーザー</span>
+        <span class="detail-value"><%= @db_config[:username] %></span>
+      </div>
+      <div class="db-info-row">
+        <span class="detail-label">パスワード</span>
+        <span class="detail-value db-info-masked">非表示（管理者にお問い合わせください）</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="form-section">
+  <div class="form-section-header">
+    <span class="form-icon">🚪</span>
+    <h2>アカウント</h2>
+  </div>
+
+  <div class="form-content">
+    <%= button_to "ログアウト", logout_path, method: :delete, class: "ghost-button ghost-button-danger" %>
+  </div>
+</section>
