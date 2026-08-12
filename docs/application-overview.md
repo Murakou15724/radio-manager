@@ -67,16 +67,15 @@
 | DELETE | `/logout` | `SessionsController#destroy` | 必要 | セッションの認証フラグを削除 |
 | GET | `/` | `ProgramsController#index` | 必要 | メイン画面。表示時に聴取状態を更新する場合がある |
 | GET | `/programs` | `ProgramsController#index` | 必要 | resources が生成する一覧ルート |
-| GET | `/programs/index` | `ProgramsController#index` | 必要 | 明示定義された重複ルート |
 | POST | `/programs` | `ProgramsController#create` | 必要 | 番組を未聴取で登録 |
 | GET | `/programs/list` | `ProgramsController#list` | 必要 | 番組名順の管理一覧 |
 | GET | `/programs/:id/edit` | `ProgramsController#edit` | 必要 | 編集画面 |
 | PATCH/PUT | `/programs/:id` | `ProgramsController#update` | 必要 | 番組更新 |
 | DELETE | `/programs/:id` | `ProgramsController#destroy` | 必要 | 番組削除 |
 | PATCH | `/programs/:id/toggle` | `ProgramsController#toggle` | 必要 | 聴取状態を反転 |
-| GET | `/settings` | `SettingsController#index` | 必要 | テーマ操作と DB 接続情報表示 |
-| GET | `/programs/new` | `ProgramsController#new` | 必要 | ルートは生成されるが、アクションと画面は未実装 |
-| GET | `/programs/:id` | `ProgramsController#show` | 必要 | ルートは生成されるが、アクションと画面は未実装 |
+| GET | `/settings` | `SettingsController#index` | 必要 | テーマ操作と DB 接続情報表示（パスワードは非表示） |
+
+`resources :programs` は 2026-08-12 の対応で `except: [:new, :show]` を指定し、未実装だった `new`／`show` ルートは公開していない。重複していた `get 'programs/index'` も削除した。
 
 根拠: `config/routes.rb`、上記各 controller、`app/views/programs/`、`app/views/sessions/new.html.erb`、`app/views/settings/index.html.erb`
 
@@ -115,7 +114,7 @@
 
 根拠: `db/schema.rb`、`db/migrate/20260423083258_create_programs.rb`、`db/migrate/20260424000000_add_last_checked_date_to_programs.rb`、`app/models/program.rb` の `enum frequency_type`
 
-注意: 業務カラムはすべて NULL 許可で、`Program` に `validates` はない。業務カラムへのインデックス、ユニーク制約、列値の DB 制約も定義されていない。
+注意: 業務カラムは DB 上すべて NULL 許可のままである（未設定のまま保存できる運用を維持するため、意図的にマイグレーションは変更していない）。2026-08-12 の対応で `Program` に以下のバリデーションを追加した: `name`・`frequency_type` の presence、`weekday`（0〜6）・`week_of_month`（1〜5）の値が入力されている場合の範囲チェック。`weekday`・`base_date`・`week_of_month` 自体の presence は必須化していない（`next_update_date` 等が未設定を `nil` として扱う設計と、それを前提にしたテストがあるため）。業務カラムへのインデックス、ユニーク制約は引き続き未定義。
 
 ## 7. 主処理フロー
 
@@ -145,7 +144,7 @@ flowchart TD
     Q --> E
 ```
 
-`GET /` と `GET /programs` は参照だけではない。`ProgramsController#index` は聴取済みレコードを走査し、`Program#current_update_date` が返す更新回と `last_checked_date` が異なる場合に DB を更新する。
+`GET /` と `GET /programs` は参照だけではない。`ProgramsController#index` は `Program.reset_stale_listened!`（`app/models/program.rb`。2026-08-12 にモデル側へ抽出）を呼び出し、聴取済みレコードのうち `current_update_date` が返す更新回と `last_checked_date` が異なるものを DB 更新する。ロジックの置き場所は改善したが、GET リクエストで状態変更が起きる構造自体は変わっていない。
 
 ## 8. 更新周期の計算
 
@@ -203,7 +202,7 @@ production は credentials の復号鍵を必要とする。Rails のコメン�
 - `Dockerfile` は production 環境のマルチステージビルドで、entrypoint は Rails server 起動時に `db:prepare` を行う。
 - `docker-compose.yml` は PostgreSQL 15 と Web サービスを定義し、ポート 3000 を公開する意図の内容である。
 - development／test は `config/database.yml` 上 SQLite、production は `DATABASE_URL` である。
-- `Dockerfile` は `RAILS_ENV="production"` を固定し、production は credentials 復号鍵を要求する。一方、`.dockerignore` は `config/master.key` と `config/credentials/*.key` をビルド対象から除外し、`docker-compose.yml` が Web サービスへ渡すアプリ用環境変数は `DATABASE_URL` だけである。YAML の破損を修正した場合も、起動には復号鍵を環境変数や secret 等で別途外部注入する必要があり、Compose の既定構成での起動可否は未確認である。
+- `Dockerfile` は `RAILS_ENV="production"` を固定し、production は credentials 復号鍵を要求する。一方、`.dockerignore` は `config/master.key` と `config/credentials/*.key` をビルド対象から除外し、`docker-compose.yml` が Web サービスへ渡すアプリ用環境変数は `DATABASE_URL` だけである。起動には復号鍵を環境変数や secret 等で別途外部注入する必要があり、Compose の既定構成での起動可否は未確認である（`docker-compose.yml` 自体の YAML 破損と `Dockerfile` の `storage/` 不在、DB クライアントパッケージの不一致は 2026-08-12 に修正済み）。
 - production の Action Cable は `config/cable.yml` で Redis adapter と `REDIS_URL` を設定している。ただし、`Gemfile` の Redis gem 宣言はコメントアウトされ、`app/channels/` には基底クラス以外の業務 channel がないため、Action Cable の実動は未確認である。
 
 Docker ビルド、Compose 起動、Rails 起動は実行していない。
@@ -234,23 +233,17 @@ controller テストは認証済みセッションを用意せず `:success` を
 
 | 重要度 | 内容 | 根拠・影響 |
 |---|---|---|
-| 高 | 設定画面が DB パスワードを HTML に表示する | `SettingsController#index` が接続設定を渡し、`app/views/settings/index.html.erb` が `@db_config[:password]` を出力する。認証済み利用者への秘密情報漏えいとなる |
 | 高 | ログインにパスワード照合が一切ない | `SessionsController#create` は無条件に `session[:authenticated] = true` を保存する。ユーザーの意図的な要求により 2026-08-12 に導入された仕様であり、公開範囲を限定するなど別の手段でアクセス制御する前提が必要である |
-| 高 | `docker-compose.yml` が有効な YAML ではない | 末尾に `</content>` と XML 風の文字列、ローカルパスが混入している。YAML パースでエラーになるため Compose をそのまま利用できない |
-| 高 | Compose の production 起動に必要な復号鍵の注入定義がない | `Dockerfile` は production を固定し、`config/environments/production.rb` は復号鍵を必須とする。`.dockerignore` は key ファイルを除外し、Compose は `DATABASE_URL` しか渡さない。YAML 修正だけでは既定起動できると確認できず、鍵の安全な外部注入が必要である |
-| 高 | Docker ビルド成立が未確認で、失敗要因がある | `Dockerfile` は `chown -R rails:rails db log storage tmp` を実行するが、リポジトリに `storage/` が存在しない。Docker ビルドは未実行 |
-| 中 | DB 製品とコンテナパッケージが一致しない | production は `pg` と `DATABASE_URL`、Compose は PostgreSQL だが、`Dockerfile` は MySQL 開発パッケージと client を導入している |
-| 中 | `resources :programs` が未実装の new／show ルートを公開する | `config/routes.rb` はルートを生成するが、`ProgramsController#new` / `show` と対応 view がない |
-| 中 | GET の一覧表示が DB を更新する | `ProgramsController#index` が `Program#update` を呼ぶ。参照リクエストが状態変更を伴い、監視・プリフェッチ・再試行でも更新され得る |
+| 高 | Compose の production 起動に必要な復号鍵の注入定義がない | `Dockerfile` は production を固定し、`config/environments/production.rb` は復号鍵を必須とする。`.dockerignore` は key ファイルを除外し、Compose は `DATABASE_URL` しか渡さない。鍵の安全な外部注入が別途必要である |
 | 中 | 設定画面の固定表示が実接続と一致しない | view は常に `localhost:5432` を表示するが、development は SQLite、Compose 内 DB ホストは `db`、production は `DATABASE_URL` に依存する |
-| 中 | 業務データの妥当性が保証されない | programs の全業務カラムが NULL 可で、model validation、DB 制約、業務カラムの index がない。日付計算不能なレコードも保存できる |
-| 中 | 隔週で基準日と指定曜日が異なる場合、計算とテスト期待値が一致しない可能性がある | `Program#next_update_date` は候補曜日に剰余日数を加えるため、指定曜日でない日を返し得る。テストの例は 2026-05-06 を期待するが、コードを静的に追うと 2026-05-04 になる。テスト未実行のため実測は未確認 |
+| 中 | 業務データの完全な妥当性は保証されない | `weekday`・`base_date`・`week_of_month` は presence 必須化していない（未設定を許容する設計のため）。範囲外の値の保存は 2026-08-12 のバリデーション追加で防いでいるが、日付計算に必要な項目が全て揃っていることまでは保証しない |
 | 中 | 認証が session の真偽値だけである | `SessionsController#create` は誰でもログインでき、利用者識別、権限分離は実装されていない |
 | 中 | production の Action Cable 構成が実動可能か未確認 | `config/cable.yml` は Redis adapter を指定するが、`Gemfile` の Redis gem はコメントアウトされ、業務 channel もない。Redis 接続を含む起動検証は未実施 |
-| 低 | controller テストが認証処理を考慮していない | `ProgramsControllerTest` の成功期待と `ApplicationController#require_login` が衝突する可能性が高い |
-| 低 | README が Rails 生成テンプレートのままである | `README.md` に環境構築、必要な環境変数、起動、テスト、デプロイの実手順がない |
+| 低 | GET の一覧表示が DB を更新する構造は残っている | `ProgramsController#index` は `Program.reset_stale_listened!` を呼ぶ。モデル側への抽出は済んでいるが、参照リクエストが状態変更を伴う構造自体は変わっていない |
 
-この一覧は実装を変更するものではない。修正方針と正しい仕様は requirements-analyst、developer、人間の承認を通じて確定する必要がある。
+上記のうち、DB パスワードの画面表示、壊れた `docker-compose.yml`、Docker ビルド失敗要因(`storage/` 不在)、DB とコンテナパッケージの不一致、未実装 `new`/`show` ルートの公開、隔週計算のバグ、controller テストの認証未考慮、README 未整備は 2026-08-12 に対応済みである。詳細は [`improvement-recommendations.md`](./improvement-recommendations.md) を参照。
+
+この一覧は今後発見された事実を追記するためのものである。修正方針と正しい仕様は開発者・人間の承認を通じて確定する必要がある。
 
 ## 12. 未確認事項
 

@@ -1,12 +1,7 @@
 class ProgramsController < ApplicationController
   def index
-    # Step 5: 自動で未聴取に戻す
-    Program.where(listened: true).each do |program|
-      current_date = program.current_update_date
-      if current_date && program.last_checked_date != current_date
-        program.update(listened: false, last_checked_date: current_date)
-      end
-    end
+    # 聴取済み番組のうち、次の更新回に入ったものを自動で未聴取に戻す
+    Program.reset_stale_listened!
 
     @program = Program.new
     # Step 4: 次回更新日が近い順にソート

@@ -27,5 +27,4 @@ services:
 
 volumes:
   postgres_data:
-  bundle_cache:</content>
-<parameter name="filePath">\\wsl.localhost\Ubuntu\home\murakamiko\projects\radio-manager\docker-compose.yml
+  bundle_cache:

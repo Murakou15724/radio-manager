@@ -30,13 +30,11 @@
 !/tmp/storage/.keep
 
 /public/assets
-/log/*
-/tmp/*
-/storage/*
 /vendor/bundle
-.env
-/config/master.key
+
 # Ignore master key for decrypting credentials and more.
+/config/master.key
+
 /db/*.sqlite3
 /db/*.sqlite3-journal
 /db/*.sqlite3-shm

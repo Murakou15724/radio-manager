@@ -5,6 +5,7 @@ class SessionsController < ApplicationController
   end
 
   def create
+    reset_session
     session[:authenticated] = true
     redirect_to root_path, notice: "ログインしました"
   end

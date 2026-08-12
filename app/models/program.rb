@@ -1,6 +1,14 @@
 class Program < ApplicationRecord
   enum frequency_type: { weekly: 0, biweekly: 1, monthly: 2 }
 
+  # weekday・base_date・week_of_month は、番組の登録後に設定する運用を許容するため
+  # 未設定(nil)自体は許可し、値が入っている場合のみ範囲を検証する。
+  # (未設定時は Program#next_update_date 等が nil を返す前提でテストされている)
+  validates :name, presence: true
+  validates :frequency_type, presence: true
+  validates :weekday, inclusion: { in: 0..6 }, allow_nil: true
+  validates :week_of_month, inclusion: { in: 1..5 }, allow_nil: true
+
   def frequency_label
     case frequency_type
     when "weekly"
@@ -33,46 +41,21 @@ class Program < ApplicationRecord
       from_date + days_ahead
 
     when "biweekly"
-      # 隔週: base_date を基準に 14 日周期
+      # 隔週: base_date を基準に、指定曜日が 14 日周期で回ってくる日を返す
       return nil if base_date.nil? || weekday.nil?
       return nil if from_date < base_date
 
-      # base_date から何日経過したか
-      days_from_base = (from_date - base_date).to_i
-      base_weekday = base_date.wday
+      # base_date 以降で最初に指定曜日と一致する日（周期の起点）
+      offset_to_weekday = (weekday - base_date.wday) % 7
+      first_occurrence = base_date + offset_to_weekday
 
-      # base_date と同じ曜日で、base_date 以降の次の 14 日周期を見つける
-      if base_weekday == weekday
-        # base_date と同じ曜日の場合、14 日周期ごと
-        days_in_cycle = days_from_base % 14
-        if days_in_cycle == 0
-          # 今日が該当日なら来々週の同曜日
-          from_date + 14
-        else
-          # 次の 14 日周期（周期の開始日）
-          from_date + (14 - days_in_cycle)
-        end
+      # from_date より後の、直近の 14 日周期上の該当日を求める
+      days_from_first_occurrence = (from_date - first_occurrence).to_i
+      if days_from_first_occurrence < 0
+        first_occurrence
       else
-        # 違う曜日の場合
-        # 次の該当曜日を候補日とする
-        days_to_weekday = (weekday - from_date.wday) % 7
-        days_to_weekday = 7 if days_to_weekday == 0
-        candidate_date = from_date + days_to_weekday
-
-        # candidate_date が base_date からの 14 日周期で該当するかチェック
-        days_from_candidate_base = (candidate_date - base_date).to_i
-
-        if days_from_candidate_base < 0
-          # base_date より前なら nil
-          return nil
-        elsif days_from_candidate_base % 14 == 0
-          # 14 日周期に該当
-          candidate_date
-        else
-          # 次の 14 日周期で該当曜日の日を探す
-          remaining_days = 14 - (days_from_candidate_base % 14)
-          candidate_date + remaining_days
-        end
+        cycles_passed = days_from_first_occurrence / 14 + 1
+        first_occurrence + 14 * cycles_passed
       end
     when "monthly"
       # 月1: 第何週の曜日を計算
@@ -128,6 +111,15 @@ class Program < ApplicationRecord
       nil
     else
       nil
+    end
+  end
+
+  def self.reset_stale_listened!(from_date = Date.current)
+    where(listened: true).find_each do |program|
+      current_date = program.current_update_date(from_date)
+      if current_date && program.last_checked_date != current_date
+        program.update(listened: false, last_checked_date: current_date)
+      end
     end
   end
 
